@@ -1,7 +1,8 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from mcp.server.fastmcp import FastMCP
 
+# FastMCP 서버 생성
 mcp = FastMCP("Cloud-Test-MCP")
 
 @mcp.tool()
@@ -14,9 +15,16 @@ def get_weather(city: str) -> str:
     """도시 이름을 받아 날씨 정보를 반환합니다."""
     return f"{city}의 현재 날씨는 맑음, 기온은 22도입니다."
 
+# FastAPI 어플리케이션 생성
 app = FastAPI()
 
+# Root 엔드포인트 (Vercel 배포 확인용)
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "MCP Server is running"}
+
+# SSE 엔드포인트
 @app.get("/sse")
-async def handle_sse(request):
+async def handle_sse(request: Request):
     async with mcp.sse_server(request) as streams:
         await mcp.run(streams[0], streams[1], mcp.create_initialization_options())
